@@ -1,8 +1,25 @@
 version: '3.8'
 
 services:
+  nginx:
+    build: ./nginx
+    container_name: mean-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - mean-network
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
+    container_name: mean-backend
     ports:
       - "8080:8080"
     env_file:
@@ -14,12 +31,13 @@ services:
 
   frontend:
     build: ./frontend
-    ports:
-      - "80:80"
+    container_name: mean-frontend
     depends_on:
       - backend
     networks:
       - mean-network
+    expose:
+      - "80"
 
   mongo:
     image: mongo:6.0
