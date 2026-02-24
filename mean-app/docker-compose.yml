@@ -5,9 +5,8 @@ services:
     build: ./backend
     ports:
       - "8080:8080"
-    environment:
-      - PORT=8080
-      - MONGODB_URI=mongodb://mongo_user:mongo_password@mongo:27017/dd_db?authSource=admin
+    env_file:
+      - .env
     depends_on:
       - mongo
     networks:
@@ -27,10 +26,12 @@ services:
     container_name: mean-mongo
     ports:
       - "27017:27017"
+    env_file:
+      - .env
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo_user
-      MONGO_INITDB_ROOT_PASSWORD: mongo_password
-      MONGO_INITDB_DATABASE: dd_db
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
       - mongo_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
