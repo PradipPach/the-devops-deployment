@@ -1,0 +1,54 @@
+# Jenkins Plugins Configuration
+# Essential plugins for CI/CD pipeline
+
+# Pipeline and Job Management
+pipeline-stage-view:latest
+pipeline-model-definition:latest
+pipeline-model-extensions:latest
+
+# Source Control
+git:latest
+github:latest
+github-branch-source:latest
+
+# Build Tools
+nodejs:latest
+docker:latest
+docker-commons:latest
+docker-pipeline:latest
+
+# Testing and Coverage
+junit:latest
+cobertura:latest
+jacoco:latest
+
+# Notifications and Reporting
+email-ext:latest
+slack:latest
+htmlpublisher:latest
+
+# Code Quality
+sonar:latest
+warnings-next-gen:latest
+
+# Credentials and Security
+credentials:latest
+credentials-binding:latest
+ssh-credentials:latest
+
+# UI and Dashboard
+dashboard-view:latest
+simple-build-step:latest
+
+# Artifact Management
+artifactdeployer:latest
+aws-codecommit-trigger:latest
+
+# Performance
+timestamper:latest
+log-parser:latest
+
+# Additional utilities
+basic-branch-build-strategies:latest
+groovy-postbuild:latest
+parameterized-trigger:latest

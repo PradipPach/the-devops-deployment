@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Jenkins CI/CD Server
+  jenkins:
+    build: ./jenkins
+    container_name: mean-jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      - JENKINS_OPTS=-Djenkins.install.runSetupWizard=false
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yaml
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/casc.yaml:/var/jenkins_home/casc.yaml:ro
+      - ./Jenkinsfile:/var/jenkins_home/Jenkinsfile:ro
+    networks:
+      - ci-cd-network
+    healthcheck:
+      test: curl -f http://localhost:8080/login || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Application Services
+  nginx:
+    build: ./mean-app/nginx
+    container_name: mean-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - ci-cd-network
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./mean-app/backend
+    container_name: mean-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./mean-app/.env
+    depends_on:
+      - mongo
+    networks:
+      - ci-cd-network
+
+  frontend:
+    build: ./mean-app/frontend
+    container_name: mean-frontend
+    depends_on:
+      - backend
+    networks:
+      - ci-cd-network
+    expose:
+      - "80"
+
+  mongo:
+    image: mongo:6.0
+    container_name: mean-mongo
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./mean-app/.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mongo_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo_password}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-dd_db}
+    volumes:
+      - mongo_data:/data/db
+      - ./mean-app/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - ci-cd-network
+    healthcheck:
+      test: echo 'db.adminCommand("ping")' | mongosh -u mongo_user -p mongo_password --authenticationDatabase admin
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jenkins_home:
+  mongo_data:
+
+networks:
+  ci-cd-network:
+    driver: bridge

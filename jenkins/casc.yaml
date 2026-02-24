@@ -1,0 +1,77 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: admin
+            permissions:
+              - "hudson.model.Hudson.Administer"
+          - name: developer
+            permissions:
+              - "hudson.model.Hudson.Read"
+              - "hudson.model.Item.Read"
+              - "hudson.model.Item.ViewStatus"
+
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+
+  remotingSecurity:
+    enabled: true
+
+  disableRemotingCLI: true
+
+  views:
+    - all:
+        includeExternalJobsFolders: false
+    - list:
+        hideRecreateDeleteButtons: false
+        includeExternalJobsFolders: false
+
+  mailer:
+    smtpHost: "smtp.gmail.com"
+    smtpPort: 587
+    replyToAddress: "noreply@example.com"
+    charset: "UTF-8"
+
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+  scriptApproval:
+    # Auto-approve common pipeline scripts
+    autoApproveScript: |
+      def r = hudson.model.Hudson.instance
+      def auth = r.securityRealm
+
+unclassified:
+  docker:
+    dockerUrl: "unix:///var/run/docker.sock"
+  location:
+    url: "http://localhost:8080/"
+  timestamperConfig:
+    allPipelines: false
+    elapsedTimeFormat: "'<b>[' HH:mm:ss.S ']</b> '"
+    systemTimeFormat: "'<b>[' HH:mm:ss ']</b> '"
+
+jobs:
+  - script: >
+      pipelineJob('MEAN-App-Pipeline') {
+        definition {
+          cps {
+            script(readFileFromWorkspace('Jenkinsfile'))
+            sandbox(true)
+          }
+        }
+        triggers {
+          githubPush()
+        }
+        properties {
+          gitLabConnection('github') {
+            host 'https://github.com'
+          }
+        }
+      }
